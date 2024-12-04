@@ -231,7 +231,7 @@ def _tensor_conv2d(
         reverse (bool): anchor weight at top-left or bottom-right
 
     """
-    batch_, out_channels, _, _ = out_shape
+    batch_, out_channels, out_height, out_width = out_shape
     batch, in_channels, height, width = input_shape
     out_channels_, in_channels_, kh, kw = weight_shape
 
@@ -247,8 +247,46 @@ def _tensor_conv2d(
     s10, s11, s12, s13 = s1[0], s1[1], s1[2], s1[3]
     s20, s21, s22, s23 = s2[0], s2[1], s2[2], s2[3]
 
-    # TODO: Implement for Task 4.2.
-    raise NotImplementedError("Need to implement for Task 4.2")
+    # iterate over output tensor
+    for b_idx in prange(b_idx):
+        for oc_idx in prange(out_channels):
+            for oh_idx in prange(out_height):
+                for ow_idx in prange(out_width):
+                    # calculate out[b_idx, oc_idx, oh_idx, ow_idx]
+                    o = (
+                        b_idx * out_strides[0]
+                        + oc_idx * out_strides[1]
+                        + oh_idx * out_strides[2]
+                        + ow_idx * out_strides[3]
+                    )
+                    # accumulation
+                    for ic_idx in prange(in_channels):
+                        # row and column indices of the kernel
+                        hw, ww = 0, 0
+                        if reverse:  # bottom-right aligned
+                            for hi in prange(max(oh_idx - kh + 1, 0), min(oh_idx + 1, height)):
+                                for wi in prange(
+                                    max(ow_idx - kw + 1, 0), min(ow_idx + 1, width)
+                                ):
+                                    out[o] += (
+                                        input[b_idx * s10 + ic_idx * s11 + hi * s12 + wi * s13]
+                                        * weight[oc_idx * s20 + ic_idx * s21 + hw * s22 + ww * s23]
+                                    )
+                                    ww += 1
+                                ww = 0
+                                hw += 1
+                        else:  # top-left aligned
+                            for hi in prange(min(oh_idx, height - 1), min(oh_idx + kh, height)):
+                                for wi in prange(
+                                    min(ow_idx, width - 1), min(ow_idx + kw, width)
+                                ):
+                                    out[o] += (
+                                        input[b_idx * s10 + ic_idx * s11 + hi * s12 + wi * s13]
+                                        * weight[oc_idx * s20 + ic_idx * s21 + hw * s22 + ww * s23]
+                                    )
+                                    ww += 1
+                                ww = 0
+                                hw += 1
 
 
 tensor_conv2d = njit(_tensor_conv2d, parallel=True, fastmath=True)
