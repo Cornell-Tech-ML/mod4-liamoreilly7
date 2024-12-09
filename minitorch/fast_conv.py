@@ -8,7 +8,6 @@ from .autodiff import Context
 from .tensor import Tensor
 from .tensor_data import (
     MAX_DIMS,
-    Index,
     Shape,
     Strides,
     Storage,
@@ -22,6 +21,7 @@ Fn = TypeVar("Fn")
 
 
 def njit(fn: Fn, **kwargs: Any) -> Fn:
+    """Njit"""
     return _njit(inline="always", **kwargs)(fn)  # type: ignore
 
 
@@ -92,7 +92,7 @@ def _tensor_conv1d(
 
     # TODO: Implement for Task 4.1.
     # raise NotImplementedError("Need to implement for Task 4.1")
-    
+
     # iterate over the output tensor
     for i in prange(out_size):
         out_index = np.empty(MAX_DIMS, np.int32)
@@ -108,17 +108,17 @@ def _tensor_conv1d(
                 # get weight and input positions
                 weight_index = np.array([out_channel, j, k])
                 w_pos = index_to_position(weight_index, s2)
-                #compute indices
-                if reverse: # backward conv
+                # compute indices
+                if reverse:  # backward conv
                     if out_width - k >= 0:
                         in_index = np.array([out_batch, j, out_width - k])
                         in_pos = index_to_position(in_index, s1)
-                        val += input[in_pos] * weight[w_pos] # dot product
-                else: # forward conv
+                        val += input[in_pos] * weight[w_pos]  # dot product
+                else:  # forward conv
                     if width > out_width + k:
                         in_index = np.array([out_batch, j, out_width + k])
                         in_pos = index_to_position(in_index, s1)
-                        val += input[in_pos] * weight[w_pos] # dot product
+                        val += input[in_pos] * weight[w_pos]  # dot product
         out[i] = val
 
 
@@ -155,6 +155,7 @@ class Conv1dFun(Function):
 
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, Tensor]:
+        """1d conv backward"""
         input, weight = ctx.saved_values
         batch, in_channels, w = input.shape
         out_channels, in_channels, kw = weight.shape
@@ -248,7 +249,7 @@ def _tensor_conv2d(
     s20, s21, s22, s23 = s2[0], s2[1], s2[2], s2[3]
 
     # iterate over output tensor
-    for b_idx in prange(b_idx):
+    for b_idx in prange(batch_):
         for oc_idx in prange(out_channels):
             for oh_idx in prange(out_height):
                 for ow_idx in prange(out_width):
@@ -264,25 +265,49 @@ def _tensor_conv2d(
                         # row and column indices of the kernel
                         hw, ww = 0, 0
                         if reverse:  # bottom-right aligned
-                            for hi in prange(max(oh_idx - kh + 1, 0), min(oh_idx + 1, height)):
+                            for hi in prange(
+                                max(oh_idx - kh + 1, 0), min(oh_idx + 1, height)
+                            ):
                                 for wi in prange(
                                     max(ow_idx - kw + 1, 0), min(ow_idx + 1, width)
                                 ):
                                     out[o] += (
-                                        input[b_idx * s10 + ic_idx * s11 + hi * s12 + wi * s13]
-                                        * weight[oc_idx * s20 + ic_idx * s21 + hw * s22 + ww * s23]
+                                        input[
+                                            b_idx * s10
+                                            + ic_idx * s11
+                                            + hi * s12
+                                            + wi * s13
+                                        ]
+                                        * weight[
+                                            oc_idx * s20
+                                            + ic_idx * s21
+                                            + hw * s22
+                                            + ww * s23
+                                        ]
                                     )
                                     ww += 1
                                 ww = 0
                                 hw += 1
                         else:  # top-left aligned
-                            for hi in prange(min(oh_idx, height - 1), min(oh_idx + kh, height)):
+                            for hi in prange(
+                                min(oh_idx, height - 1), min(oh_idx + kh, height)
+                            ):
                                 for wi in prange(
                                     min(ow_idx, width - 1), min(ow_idx + kw, width)
                                 ):
                                     out[o] += (
-                                        input[b_idx * s10 + ic_idx * s11 + hi * s12 + wi * s13]
-                                        * weight[oc_idx * s20 + ic_idx * s21 + hw * s22 + ww * s23]
+                                        input[
+                                            b_idx * s10
+                                            + ic_idx * s11
+                                            + hi * s12
+                                            + wi * s13
+                                        ]
+                                        * weight[
+                                            oc_idx * s20
+                                            + ic_idx * s21
+                                            + hw * s22
+                                            + ww * s23
+                                        ]
                                     )
                                     ww += 1
                                 ww = 0
@@ -320,6 +345,7 @@ class Conv2dFun(Function):
 
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, Tensor]:
+        """2d conv backward"""
         input, weight = ctx.saved_values
         batch, in_channels, h, w = input.shape
         out_channels, in_channels, kh, kw = weight.shape

@@ -328,7 +328,7 @@ def zeros(shape: UserShape, backend: TensorBackend = SimpleBackend) -> Tensor:
 
     """
     return minitorch.Tensor.make(
-        [0.0] * int(operators.prod(shape)), shape, backend=backend
+        [0.0] * int(operators.prod(list(shape))), shape, backend=backend
     )
 
 
@@ -350,7 +350,7 @@ def rand(
         :class:`Tensor` : new tensor
 
     """
-    vals = [random.random() for _ in range(int(operators.prod(shape)))]
+    vals = [random.random() for _ in range(int(operators.prod(list(shape))))]
     tensor = minitorch.Tensor.make(vals, shape, backend=backend)
     tensor.requires_grad_(requires_grad)
     return tensor
