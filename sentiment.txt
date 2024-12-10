@@ -1,15 +1,15 @@
 a._tensor.permute is callable: True
-Order tensor: 
+Order tensor:
 [1.00 0.00 2.00]
 Built-in int: <class 'int'>
 a._tensor.permute is callable: True
-Order tensor: 
+Order tensor:
 [1.00 0.00 2.00]
 Built-in int: <class 'int'>
 a._tensor.permute is callable: True
-Order tensor: 
+Order tensor:
 [1.00 0.00 2.00]
 Built-in int: <class 'int'>
 a._tensor.permute is callable: True
-Order tensor: 
+Order tensor:
 [1.00 0.00 2.00]
