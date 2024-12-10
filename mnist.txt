@@ -1,0 +1,6 @@
+(.venv) liamoreilly@Liams-Air-9 mod4-liamoreilly7 % python project/run_mnist_multiclass.py
+Traceback (most recent call last):
+  File "/Users/liamoreilly/Desktop/CornellTech/MLE/mod4-liamoreilly7/project/run_mnist_multiclass.py", line 8, in <module>
+    BACKEND = minitorch.TensorBackend(minitorch.FastOps)
+                                      ^^^^^^^^^^^^^^^^^
+AttributeError: module 'minitorch' has no attribute 'FastOps'
